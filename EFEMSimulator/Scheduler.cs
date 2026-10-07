@@ -30,7 +30,7 @@ public class Scheduler
     public void RunSimulation()
     {
         Console.WriteLine("==============================================");
-        Console.WriteLine("  EFEM SIMULATION START — 25 wafers");
+        Console.WriteLine("  EFEM SIMULATION START - 25 wafers");
         Console.WriteLine("==============================================\n");
 
         int totalWafers = _lp1.WaferCount;
@@ -64,7 +64,7 @@ public class Scheduler
         }
 
         if (SimulatedTime >= 2000)
-            Console.WriteLine("\nWARNING: Simulation hit time cap — possible deadlock");
+            Console.WriteLine("\nWARNING: Simulation hit time cap - possible deadlock");
 
         PrintStats(totalWafers);
     }
@@ -78,20 +78,23 @@ public class Scheduler
     {
         if (!_robot.IsIdle) return false;
 
-        // P0 — robot is carrying: place at reserved destination
+        // P0 - robot is carrying: place at reserved destination
         if (_robot.IsCarrying)
+        {
+            _wasWaiting = false;
             return TryPlaceCarriedWafer();
+        }
 
-        // P1 — chamber done: pick immediately (hard deadline)
-        if (TryPickFromChamber()) return true;
+        // P1 - chamber done: pick immediately (hard deadline)
+        if (TryPickFromChamber()) { _wasWaiting = false; return true; }
 
-        // P2 — heated wafer ready + free chamber: feed chamber
-        if (TryFeedChamber()) return true;
+        // P2 - heated wafer ready + free chamber: feed chamber
+        if (TryFeedChamber()) { _wasWaiting = false; return true; }
 
-        // P3 — load port has wafers + free PHB slot: pipeline next wafer
-        if (TryLoadPreHeat()) return true;
+        // P3 - load port has wafers + free PHB slot: pipeline next wafer
+        if (TryLoadPreHeat()) { _wasWaiting = false; return true; }
 
-        // Nothing to do — track wait episode
+        // Nothing to do - track wait episode
         TrackWait();
         return false;
     }
@@ -128,7 +131,7 @@ public class Scheduler
         var freeChamber = GetFreeChamber();
         if (readySlot == null || freeChamber == null) return false;
 
-        Console.WriteLine($"[t={SimulatedTime:D4}s] SCHED  Dispatch: pick from PHB S{readySlot.SlotId} → CH{freeChamber.Id}");
+        Console.WriteLine($"[t={SimulatedTime:D4}s] SCHED  Dispatch: pick from PHB S{readySlot.SlotId} -> CH{freeChamber.Id}");
         _robot.Dispatch(RobotTask.PickFromPHB, sourceIndex: readySlot.SlotId, destIndex: freeChamber.Id);
         return true;
     }
@@ -141,7 +144,7 @@ public class Scheduler
         var freeSlot = _buffer.GetFreeSlot();
         if (freeSlot == null || !_lp1.HasWafers) return false;
 
-        Console.WriteLine($"[t={SimulatedTime:D4}s] SCHED  Dispatch: pick from LP1 → PHB S{freeSlot.SlotId}");
+        Console.WriteLine($"[t={SimulatedTime:D4}s] SCHED  Dispatch: pick from LP1 -> PHB S{freeSlot.SlotId}");
         _robot.Dispatch(RobotTask.PickFromLP1, sourceIndex: -1, destIndex: freeSlot.SlotId);
         return true;
     }

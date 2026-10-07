@@ -23,9 +23,10 @@ public class PreHeatBuffer
 
     public BufferSlot? GetReadySlot()
     {
-        foreach (var slot in Slots)
-            if (slot.IsReady) return slot;
-        return null;
+        return Slots
+            .Where(s => s.IsReady)
+            .OrderBy(s => s.Wafer!.Id)
+            .FirstOrDefault();
     }
 
     public bool HasFreeSlot => GetFreeSlot() != null;
