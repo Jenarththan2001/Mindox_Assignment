@@ -101,8 +101,6 @@ If the robot ticked before the damage check, it could arrive at a chamber in the
 
 ---
 
----
-
 ## FIFO Fix in `GetReadySlot()` — Avoiding Starvation
 
 ### What Happened Before the Fix
