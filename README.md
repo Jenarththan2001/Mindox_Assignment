@@ -167,7 +167,23 @@ The scheduler runs a fixed-priority decision every tick (P0 → P3, first match 
 | **P2** | Pick from PHB → place in free chamber | Keep the bottleneck busy |
 | **P3** | Pick from LP1 → place in free PHB slot | Pipeline the next wafer |
 
-**Look-ahead guard (`IsSafeToStartTransfer`):** Before starting any P2 or P3 transfer, the scheduler checks whether a processing chamber will finish before the robot could reach it. A transfer is blocked when `remaining < 4` seconds — the robot needs 9 seconds (3+3+3) to complete a transfer and arrive, while the pickup window adds 6 seconds, giving a safe threshold of 4.
+```mermaid
+flowchart TD
+    A{Robot idle?} -- No --> Z[Wait / Retry next tick]
+    A -- Yes --> B{Robot carrying\na wafer?}
+    B -- Yes --> P0[P0: Place wafer at\nreserved destination]
+    B -- No --> C{Any chamber\nNeedsPickup?}
+    C -- Yes --> P1[P1: Pick from chamber\nHard 6s deadline]
+    C -- No --> D{IsSafeToStartTransfer?}
+    D -- No --> WAIT[Hold position]
+    D -- Yes --> E{PHB slot ready\nAND free chamber?}
+    E -- Yes --> P2[P2: PHB → Chamber\nKeep bottleneck busy]
+    E -- No --> F{LP1 has wafers\nAND free PHB slot?}
+    F -- Yes --> P3[P3: LP1 → PHB\nPipeline next wafer]
+    F -- No --> WAIT
+```
+
+**Look-ahead guard (`IsSafeToStartTransfer`):** Blocks any P2 or P3 transfer when `remaining < 4` seconds on a processing chamber — the robot needs 9s (3+3+3) to complete a transfer and arrive, and the 6s pickup window gives a safe threshold of 4.
 
 ---
 
