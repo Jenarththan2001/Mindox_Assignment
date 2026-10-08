@@ -94,10 +94,18 @@ public class Robot
 
             case RobotTask.PickFromChamber:
                 var pickChamber = chambers[_sourceIndex - 1];
-                CarriedWafer = pickChamber.PickupWafer();
-                IsCarrying = true;
-                PlaceTask = RobotTask.PlaceInLP2;
-                Console.WriteLine($"[t={simulatedTime:D4}s] ROBOT  Picked {CarriedWafer} from CH{_sourceIndex}");
+                if (pickChamber.Wafer == null)
+                {
+                    // Chamber was cleared by damage handler this tick — nothing to pick
+                    Console.WriteLine($"[t={simulatedTime:D4}s] ROBOT  CH{_sourceIndex} already cleared (wafer damaged) — pick skipped");
+                }
+                else
+                {
+                    CarriedWafer = pickChamber.PickupWafer();
+                    IsCarrying = true;
+                    PlaceTask = RobotTask.PlaceInLP2;
+                    Console.WriteLine($"[t={simulatedTime:D4}s] ROBOT  Picked {CarriedWafer} from CH{_sourceIndex}");
+                }
                 break;
 
             case RobotTask.PlaceInLP2:

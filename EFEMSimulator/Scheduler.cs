@@ -37,15 +37,13 @@ public class Scheduler
 
         while (!IsComplete(totalWafers) && SimulatedTime < 2000)
         {
-            // 1. Advance all timers
+            // 1. Advance timers
             _buffer.Tick(1);
             foreach (var ch in _chambers)
                 ch.Tick(1, SimulatedTime + 1);
-            _robot.Tick(1, SimulatedTime + 1, _lp1, _lp2, _buffer, _chambers);
 
-            SimulatedTime++;
-
-            // 2. Handle any damaged chambers
+            // 2. Handle damaged chambers BEFORE robot acts
+            //    (fixes tick-order bug: chamber damages and robot arrives same tick)
             foreach (var ch in _chambers)
             {
                 if (ch.State == ChamberState.WaferDamaged)
@@ -54,6 +52,10 @@ public class Scheduler
                     ch.Reset();
                 }
             }
+
+            _robot.Tick(1, SimulatedTime + 1, _lp1, _lp2, _buffer, _chambers);
+
+            SimulatedTime++;
 
             // 3. Scheduler decides next move
             bool dispatched = Decide();
